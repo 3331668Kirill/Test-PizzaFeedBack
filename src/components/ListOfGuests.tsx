@@ -1,26 +1,35 @@
-import React, {useEffect, useState} from 'react'
+import React, {ChangeEvent, useEffect, useState} from 'react'
 import '../App.css'
-import {ListOfGuestsPropsType} from "../types/types";
+import {TypeButtonValue, TypeFeedBackInfo, TypeListOfGuestsProps} from "../types/types";
 import {Stars} from "./Stars";
 
 
 export const ListOfGuests = ({
                                  guests,
                                  eatsVeganPizza
-                             }: ListOfGuestsPropsType) => {
+                             }: TypeListOfGuestsProps) => {
 
-    const initialStateOfFeedbacks: Array<{ name: string, star: number, phone: string, comment: string }> = []
+    const initialStateOfFeedbacks: TypeFeedBackInfo = []
     const [mode, setMode] = useState<boolean>(false)
+    const [buttonValue, setButtonValue] = useState<TypeButtonValue>('cancel')
     const [name, setName] = useState<string>('')
     const [star, setStar] = useState<number>(3)
-    const [feedbackInfo, setFeedBackInfo] = useState<Array<{ name: string, star: number, phone: string, comment: string }>>(initialStateOfFeedbacks)
+    const [phone, setPhone] = useState<string>('')
+    const [comment, setComment] = useState<string>('')
+    const [feedbackInfo, setFeedBackInfo] = useState<TypeFeedBackInfo>(initialStateOfFeedbacks)
     console.log(feedbackInfo)
     useEffect(() => {
         let findName = feedbackInfo.find(value => value.name === name)
         if (findName) {
             setStar(findName.star)
-
-        } else setStar(3)
+            setPhone(findName.phone)
+            setComment(findName.comment)
+        } else {
+            setStar(3)
+            setPhone('')
+            setComment('')
+            setButtonValue('cancel')
+        }
     }, [name])
 
     const saveFeedBack = () => {
@@ -28,10 +37,28 @@ export const ListOfGuests = ({
             if (st.find(value => value.name === name)) {
                 return st
             }
-            return [...st, {name, star, phone: '1', comment: 'www'}]
+            return [...st, {name, star, phone, comment}]
         })
         setMode(false)
     }
+
+    const cancelFeedBack = () => {
+         setMode(false)
+    }
+
+    const changeInputValue = (e: ChangeEvent<HTMLInputElement>) => {
+        setPhone(e.currentTarget.value)
+        if (comment !== '' && phone !== '') {
+            setButtonValue('save')
+        }
+    }
+    const changeTextAreaValue = (e: ChangeEvent<HTMLTextAreaElement>) => {
+        setComment(e.currentTarget.value)
+        if (comment !== '' && phone !== '') {
+            setButtonValue('save')
+        }
+    }
+
 
     return (
         <>
@@ -47,6 +74,9 @@ export const ListOfGuests = ({
                                 ? <td onClick={() => {
                                     setMode(true)
                                     setName(t.name)
+                                    if (feedbackInfo.find(value => value.name === t.name)) {
+                                        setButtonValue('save')
+                                    }
                                 }}
                                       style={eatsVeganPizza.find(value => value === t.name) ? {color: 'green'} : {}}>{t.name}</td>
                                 : <td style={{color: 'gray'}}>{t.name}</td>
@@ -68,20 +98,29 @@ export const ListOfGuests = ({
                     <Stars setStar={setStar} star={star}/>
                 </div>
                 <div>
-                   Phone
+                    Phone
                 </div>
                 <div>
-                    <input/>
+                    <input value={phone} onChange={changeInputValue}/>
                 </div>
                 <div>
-                   Comment
+                    Comment
                 </div>
                 <div>
-                    <textarea/>
+                    <textarea value={comment}
+                              onChange={(e) =>
+                                  changeTextAreaValue(e)}/>
                 </div>
 
-                <button onClick={saveFeedBack}> SAVE
+                <button onClick={buttonValue === 'save'
+                    ? saveFeedBack
+                    : cancelFeedBack}>
+                    {buttonValue}
                 </button>
+                {buttonValue === 'save' &&
+                <button>
+                    delete
+                </button>}
             </div>
 
 
