@@ -4,44 +4,64 @@ import {TypeGuest, TypeGuests, TypeVeganGuests} from "./types/types";
 import {ListOfGuests} from "./components/ListOfGuests";
 
 
+const App = () => {
 
-function App() {
-    const [guests, setGuests] = useState<TypeGuest>([])
-    //const [eatsPizza, setEatsPizza] = useState<Array<string>>([])
-    const [eatsVeganPizza, setVeganEatsPizza] = useState<Array<string>>([])
+    let initialStateGuests = JSON.parse(localStorage.getItem("guests") as string)
+    let initialStateVeganGuests = JSON.parse(localStorage.getItem("veganGuests") as string)
+    initialStateGuests = initialStateGuests || []
+    initialStateVeganGuests = initialStateVeganGuests || []
+
+    const [guests, setGuests] = useState<TypeGuest>(initialStateGuests)
+    const [eatsVeganPizza, setVeganEatsPizza] = useState<Array<string>>(initialStateVeganGuests)
     const [error, setError] = useState<string>('')
 
-    useEffect(() => {
-            fetch('https://gp-js-test.herokuapp.com/pizza/guests')
-                .then((response) => response.json())
-                .then((data: TypeGuests) => {
-                    setGuests(data.party)
-                    //setEatsPizza(data.party.filter(t => t.eatsPizza).map(t => t.name))
-                    return data.party.filter(t => t.eatsPizza).map(t => t.name)
-                })
-                .then(data => {
-                    let str = data.join(',')
-                    fetch(`https://gp-js-test.herokuapp.com/pizza/world-diets-book/${str}`)
-                        .then(res => res.json())
-                        .then((data: TypeVeganGuests) => {
-                            setVeganEatsPizza(data.diet.filter(t => t.isVegan).map(t => t.name))
-                        })
-                })
-                .catch(() => setError("Something go wrong, try again later"))
 
+    useEffect(() => {
+            if (guests.length === 0 && eatsVeganPizza.length === 0) {
+                fetch('https://gp-js-test.herokuapp.com/pizza/guests')
+                    .then((response) => response.json())
+                    .then((data: TypeGuests) => {
+                        setGuests(data.party)
+                        let dataForLocalStorage = JSON.stringify(data.party)
+                        localStorage.setItem('guests', dataForLocalStorage)
+                        return data.party.filter(t => t.eatsPizza).map(t => t.name)
+                    })
+                    .then(data => {
+                        let str = data.join(',')
+                        fetch(`https://gp-js-test.herokuapp.com/pizza/world-diets-book/${str}`)
+                            .then(res => res.json())
+                            .then((data: TypeVeganGuests) => {
+                                setVeganEatsPizza(data.diet.filter(t => t.isVegan).map(t => t.name))
+                                let dataForLocalStorage = JSON.stringify(data.diet.filter(t => t.isVegan).map(t => t.name))
+                                localStorage.setItem('veganGuests', dataForLocalStorage)
+                            })
+                    })
+                    .catch(() => setError("Something go wrong, try again later"))
+
+            }
         },
         [])
 
 
-  return (
-    <div className="App">
-      <div className="App-header">
+    return (
+        <div className="App">
+            <div className="App-header">
+                {!error && guests.length === 0
+                    ? <div style={{color: 'red', fontSize: '30px'}}>
+                        LOADING....
+                    </div>
+                    : <div> {error
+                        ? <div> {error}</div>
+                        : <ListOfGuests guests={guests} eatsVeganPizza={eatsVeganPizza}/>
+                    }
+                    </div>
 
-          <ListOfGuests guests={guests} eatsVeganPizza={eatsVeganPizza} />
+                }
+            </div>
 
-      </div>
-    </div>
-  );
+
+        </div>
+    );
 }
 
 export default App;
