@@ -14,6 +14,7 @@ const App = () => {
     const [guests, setGuests] = useState<TypeGuest>(initialStateGuests)
     const [eatsVeganPizza, setVeganEatsPizza] = useState<Array<string>>(initialStateVeganGuests)
     const [error, setError] = useState<string>('')
+    const [refresh, setRefresh] = useState<boolean>(false)
 
 
     useEffect(() => {
@@ -40,12 +41,23 @@ const App = () => {
 
             }
         },
-        [])
+        [refresh])
 
 
     return (
         <div className="App">
             <div className="App-header">
+                <button className="button"
+                        onClick={()=>{
+                            localStorage.removeItem("feedbackInfo")
+                            localStorage.removeItem("veganGuests")
+                            localStorage.removeItem("guests")
+                            setGuests([])
+                            setVeganEatsPizza([])
+                            setRefresh(!refresh)
+                        }}>
+                    CLEAR APP
+                </button>
                 {!error && guests.length === 0
                     ? <div style={{color: 'red', fontSize: '30px'}}>
                         LOADING....
